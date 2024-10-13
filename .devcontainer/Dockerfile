@@ -36,5 +36,8 @@ RUN chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 WORKDIR /home/${USERNAME}
 USER ${USERNAME}
 
+# Start the k3s cluster
+k3d cluster create workshop --servers 1 --agents 1
+
 ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
 CMD [ "sleep", "infinity" ]
