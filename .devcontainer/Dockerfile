@@ -31,14 +31,5 @@ RUN chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 WORKDIR /home/${USERNAME}
 USER ${USERNAME}
 
-# Start the k3s cluster
-k3d cluster create workshop --servers 1 --agents 1
-
-# Load the sample 
-kubectl create namespace easytrade
-git clone https://github.com/Dynatrace/easytrade.git
-kubectl -n easytrade apply -f ./easytrade/kubernetes-manifests
-#while [[ `kubectl get pods -n easytrade | grep frontend | grep "0/"` ]]; do kubectl get pods -n easytrade; echo "==> waiting for frontend pod ready"; sleep 3; done
-
 ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
 CMD [ "sleep", "infinity" ]
