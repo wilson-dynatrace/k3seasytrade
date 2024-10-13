@@ -6,10 +6,35 @@ FROM ghcr.io/cse-labs/k3d:latest
 # some images require specific values
 ARG USERNAME=vscode
 
-# log the docker build start event
-RUN echo "$(date +'%Y-%m-%d %H:%M:%S')    docker build start" >> /home/$USERNAME/status
+COPY docker.sh /tmp/scripts/
+RUN chmod +x /tmp/scripts/docker.sh
 
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME
+# update the container
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install zsh ca-certificates gnupg jq -y && \
+    apt-get autoremove -y && \
+    apt-get clean -y
 
-# log the docker build complete
-RUN echo "$(date +'%Y-%m-%d %H:%M:%S')    docker build complete" >> /home/$USERNAME/status
+# Install kubectl
+RUN curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && chmod +x /usr/local/bin/kubectl
+
+# Install Helm
+RUN curl -s https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash -
+
+# Install kind
+RUN KIND_RELEASE=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kind/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
+    && curl -sSL -o /usr/local/bin/kind https://kind.sigs.k8s.io/dl/$KIND_RELEASE/kind-linux-amd64 \
+    && chmod +x /usr/local/bin/kind
+
+RUN /tmp/scripts/docker.sh
+
+# change ownership of the home directory
+RUN chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
+
+WORKDIR /home/${USERNAME}
+USER ${USERNAME}
+
+ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
+CMD [ "sleep", "infinity" ]
