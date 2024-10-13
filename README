@@ -1,1 +1,4 @@
 # README
+
+# Expose the interface
+kubectl -n easytrade port-forward svc/frontend 3000:3000
